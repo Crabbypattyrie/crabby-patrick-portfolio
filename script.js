@@ -1,260 +1,933 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
+/* =========================================================
+   THREE.JS PIRATE PATRICK
+   ========================================================= */
+
 const canvas = document.getElementById('bg-canvas');
 const homeSection = document.getElementById('home');
+
 const scene = new THREE.Scene();
 
+
 function getSize() {
-  return {
-    width: homeSection.clientWidth,
-    height: homeSection.clientHeight  
-  };
+    return {
+        width: homeSection.clientWidth,
+        height: homeSection.clientHeight
+    };
 }
+
 
 const { width: initWidth, height: initHeight } = getSize();
 
+
+/* =========================================================
+   CAMERA
+   ========================================================= */
+
 const camera = new THREE.PerspectiveCamera(
-  50,
-  initWidth / initHeight,
-  0.1,
-  1000
+    50,
+    initWidth / initHeight,
+    0.1,
+    1000
 );
 
 camera.position.set(0, 0, 5);
 
+
+/* =========================================================
+   RENDERER
+   ========================================================= */
+
 const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  alpha: true
+    canvas,
+    antialias: true,
+    alpha: true
 });
 
-renderer.setSize(initWidth, initHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-const ambient = new THREE.AmbientLight(0xffffff, 2);
-scene.add(ambient);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-dirLight.position.set(3, 5, 2);
-scene.add(dirLight);
-
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
-scene.add(hemiLight);
-
-const loader = new GLTFLoader();
-let model;
-let baseFitDistance = 0;
-let baseModelY = 0;
-
-function getXOffsetRatio() {
-  return window.innerWidth <= 768 ? 0 : 0.70;
-}
-
-function applyModelOffset() {
-  if (!model || !baseFitDistance) return;
-  model.position.x = baseFitDistance * getXOffsetRatio();
-}
-
-loader.load(
-  'pirate_patrick.glb',
-  (gltf) => {
-    model = gltf.scene;
-    scene.add(model);
-
-    model.traverse((child) => {
-      if (child.isMesh) {
-        console.log(
-          'Mesh:',
-          child.name,
-          '| Material:',
-          child.material,
-          '| Visible:',
-          child.visible
-        );
-
-        if (child.material) {
-          child.material.side = THREE.DoubleSide;
-        }
-      }
-    });
-
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-
-    model.position.sub(center);
-
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fitDistance =
-      maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360));
-
-    baseFitDistance = fitDistance;
-
-    const CAMERA_DISTANCE_MULTIPLIER = 1.8;
-
-    const MODEL_Y_OFFSET = 0.2;
-    model.position.y += fitDistance * MODEL_Y_OFFSET;
-    baseModelY = model.position.y;
-
-    const MODEL_ROTATION_Y = -0.5; 
-    model.rotation.y = MODEL_ROTATION_Y;
-
-    applyModelOffset();
-
-    camera.position.set(
-      0,
-      0,
-      fitDistance * CAMERA_DISTANCE_MULTIPLIER
-    );
-
-    camera.near = fitDistance / 100;
-    camera.far = fitDistance * 100;
-    camera.updateProjectionMatrix();
-
-    console.log(
-      'Model size:',
-      size.x.toFixed(2),
-      size.y.toFixed(2),
-      size.z.toFixed(2),
-      '| Camera distance:',
-      (fitDistance * CAMERA_DISTANCE_MULTIPLIER).toFixed(2)
-    );
-  },
-  (xhr) => {
-    console.log(
-      `Loading model: ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`
-    );
-  },
-  (error) => {
-    console.error(
-      'Error loading pirate_patrick.glb:',
-      error
-    );
-  }
+renderer.setSize(
+    initWidth,
+    initHeight
 );
 
-const clock = new THREE.Clock();
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
 
-const FLOAT_AMPLITUDE = 0.06; 
-const FLOAT_SPEED = 2.0;     
+
+/* =========================================================
+   LIGHTING
+   ========================================================= */
+
+const ambient = new THREE.AmbientLight(
+    0xffffff,
+    2
+);
+
+scene.add(ambient);
+
+
+const dirLight = new THREE.DirectionalLight(
+    0xffffff,
+    2
+);
+
+dirLight.position.set(
+    3,
+    5,
+    2
+);
+
+scene.add(dirLight);
+
+
+const hemiLight = new THREE.HemisphereLight(
+    0xffffff,
+    0x444444,
+    2
+);
+
+scene.add(hemiLight);
+
+
+/* =========================================================
+   MODEL
+   ========================================================= */
+
+const loader = new GLTFLoader();
+
+let model;
+
+let baseFitDistance = 0;
+
+let baseModelY = 0;
+
+
+/* =========================================================
+   RESPONSIVE MODEL POSITION
+   ========================================================= */
+
+function getXOffsetRatio() {
+
+    const width = window.innerWidth;
+
+    /* Very small phones */
+    if (width <= 480) {
+        return 0;
+    }
+
+    /* Tablet / normal phones */
+    if (width <= 768) {
+        return 0;
+    }
+
+    /* Desktop */
+    return 0.70;
+}
+
+
+function getCameraMultiplier() {
+
+    const width = window.innerWidth;
+
+    /*
+        Smaller multiplier = model appears bigger
+        Larger multiplier = model appears smaller
+    */
+
+    if (width <= 360) {
+        return 2.25;
+    }
+
+    if (width <= 480) {
+        return 2.05;
+    }
+
+    if (width <= 768) {
+        return 1.90;
+    }
+
+    if (width <= 1024) {
+        return 1.85;
+    }
+
+    return 1.80;
+}
+
+
+function getModelYOffset() {
+
+    const width = window.innerWidth;
+
+    if (width <= 360) {
+        return 0.05;
+    }
+
+    if (width <= 480) {
+        return 0.08;
+    }
+
+    if (width <= 768) {
+        return 0.10;
+    }
+
+    return 0.20;
+}
+
+
+function applyModelPosition() {
+
+    if (!model || !baseFitDistance) {
+        return;
+    }
+
+    model.position.x =
+        baseFitDistance *
+        getXOffsetRatio();
+}
+
+
+function updateCamera() {
+
+    if (!baseFitDistance) {
+        return;
+    }
+
+    const multiplier =
+        getCameraMultiplier();
+
+    camera.position.set(
+        0,
+        0,
+        baseFitDistance * multiplier
+    );
+
+    camera.near =
+        baseFitDistance / 100;
+
+    camera.far =
+        baseFitDistance * 100;
+
+    camera.updateProjectionMatrix();
+}
+
+
+/* =========================================================
+   LOAD GLB
+   ========================================================= */
+
+loader.load(
+
+    'pirate_patrick.glb',
+
+    (gltf) => {
+
+        model = gltf.scene;
+
+        scene.add(model);
+
+
+        /* -------------------------------------------------
+           MODEL MATERIALS
+           ------------------------------------------------- */
+
+        model.traverse((child) => {
+
+            if (child.isMesh) {
+
+                console.log(
+                    'Mesh:',
+                    child.name,
+                    '| Material:',
+                    child.material,
+                    '| Visible:',
+                    child.visible
+                );
+
+
+                if (child.material) {
+
+                    child.material.side =
+                        THREE.DoubleSide;
+                }
+            }
+        });
+
+
+        /* -------------------------------------------------
+           MODEL BOUNDING BOX
+           ------------------------------------------------- */
+
+        const box =
+            new THREE.Box3()
+                .setFromObject(model);
+
+
+        const size =
+            box.getSize(
+                new THREE.Vector3()
+            );
+
+
+        const center =
+            box.getCenter(
+                new THREE.Vector3()
+            );
+
+
+        /* Center model */
+
+        model.position.sub(center);
+
+
+        /* -------------------------------------------------
+           FIT MODEL TO CAMERA
+           ------------------------------------------------- */
+
+        const maxDim =
+            Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
+
+
+        const fitDistance =
+            maxDim /
+            (
+                2 *
+                Math.tan(
+                    (
+                        Math.PI *
+                        camera.fov
+                    ) /
+                    360
+                )
+            );
+
+
+        baseFitDistance =
+            fitDistance;
+
+
+        /* -------------------------------------------------
+           MODEL VERTICAL POSITION
+           ------------------------------------------------- */
+
+        const yOffset =
+            getModelYOffset();
+
+
+        model.position.y +=
+            fitDistance *
+            yOffset;
+
+
+        baseModelY =
+            model.position.y;
+
+
+        /* -------------------------------------------------
+           ROTATION
+           ------------------------------------------------- */
+
+        const MODEL_ROTATION_Y =
+            -0.5;
+
+        model.rotation.y =
+            MODEL_ROTATION_Y;
+
+
+        /* -------------------------------------------------
+           APPLY RESPONSIVE POSITION
+           ------------------------------------------------- */
+
+        applyModelPosition();
+
+        updateCamera();
+
+
+        console.log(
+            'Model size:',
+            size.x.toFixed(2),
+            size.y.toFixed(2),
+            size.z.toFixed(2),
+
+            '| Camera distance:',
+            camera.position.z.toFixed(2)
+        );
+    },
+
+
+    /* -----------------------------------------------------
+       LOADING
+       ----------------------------------------------------- */
+
+    (xhr) => {
+
+        if (xhr.total) {
+
+            console.log(
+                `Loading model: ${
+                    (
+                        xhr.loaded /
+                        xhr.total *
+                        100
+                    ).toFixed(0)
+                }%`
+            );
+        }
+    },
+
+
+    /* -----------------------------------------------------
+       ERROR
+       ----------------------------------------------------- */
+
+    (error) => {
+
+        console.error(
+            'Error loading pirate_patrick.glb:',
+            error
+        );
+    }
+);
+
+
+/* =========================================================
+   FLOATING ANIMATION
+   ========================================================= */
+
+const clock =
+    new THREE.Clock();
+
+
+const FLOAT_AMPLITUDE =
+    0.06;
+
+const FLOAT_SPEED =
+    2.0;
+
 
 function animate() {
-  requestAnimationFrame(animate);
 
-  if (model && baseFitDistance) {
-    const t = clock.getElapsedTime();
-    const bobOffset = Math.sin(t * FLOAT_SPEED) * FLOAT_AMPLITUDE * baseFitDistance;
-    model.position.y = baseModelY + bobOffset;
-  }
+    requestAnimationFrame(
+        animate
+    );
 
-  renderer.render(scene, camera);
+
+    if (
+        model &&
+        baseFitDistance
+    ) {
+
+        const t =
+            clock.getElapsedTime();
+
+
+        const bobOffset =
+            Math.sin(
+                t *
+                FLOAT_SPEED
+            ) *
+            FLOAT_AMPLITUDE *
+            baseFitDistance;
+
+
+        model.position.y =
+            baseModelY +
+            bobOffset;
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
 }
+
 
 animate();
 
-window.addEventListener('resize', () => {
-  const { width, height } = getSize();
 
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
+/* =========================================================
+   RESIZE
+   ========================================================= */
 
-  renderer.setSize(width, height);
+let resizeTimeout;
 
-  applyModelOffset();
-});
+
+window.addEventListener(
+    'resize',
+    () => {
+
+        clearTimeout(
+            resizeTimeout
+        );
+
+
+        resizeTimeout =
+            setTimeout(() => {
+
+                const {
+                    width,
+                    height
+                } = getSize();
+
+
+                /* Camera */
+
+                camera.aspect =
+                    width /
+                    height;
+
+
+                camera.updateProjectionMatrix();
+
+
+                /* Renderer */
+
+                renderer.setSize(
+                    width,
+                    height
+                );
+
+
+                /* Model */
+
+                applyModelPosition();
+
+                updateCamera();
+
+
+                /*
+                    Recalculate Y position
+                    based on current screen
+                */
+
+                if (model && baseFitDistance) {
+
+                    const yOffset =
+                        getModelYOffset();
+
+
+                    const newBaseY =
+                        yOffset *
+                        baseFitDistance;
+
+
+                    /*
+                        Keep floating animation
+                        centered around new position
+                    */
+
+                    baseModelY =
+                        newBaseY;
+                }
+
+            }, 100);
+    }
+);
+
+
+/* =========================================================
+   PARTICLE NETWORK BACKGROUND
+   ========================================================= */
 
 (function () {
-  const canvas = document.getElementById('particle-bg');
-  const ctx = canvas.getContext('2d');
 
-  let width, height;
-  let particles = [];
+    const canvas =
+        document.getElementById(
+            'particle-bg'
+        );
 
-  const PARTICLE_DENSITY = 14000; 
-  const MAX_LINK_DISTANCE = 140;  
-  const DOT_SPEED = 1.00;         
-  const DOT_RADIUS_MIN = 1.5;
-  const DOT_RADIUS_MAX = 3;
-  const DOT_COLOR = 'rgba(100, 99, 99, 0.9)';
-  const LINE_COLOR = '150,150,150';  
-  const BG_COLOR = '#fafafa';        
 
-  function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-  }
-
-  function createParticles() {
-    const count = Math.floor((width * height) / PARTICLE_DENSITY);
-    particles = [];
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * DOT_SPEED,
-        vy: (Math.random() - 0.5) * DOT_SPEED,
-        r: Math.random() * (DOT_RADIUS_MAX - DOT_RADIUS_MIN) + DOT_RADIUS_MIN
-      });
+    if (!canvas) {
+        return;
     }
-  }
 
-  function update() {
-    for (const p of particles) {
-      p.x += p.vx;
-      p.y += p.vy;
 
-      if (p.x <= 0 || p.x >= width) p.vx *= -1;
-      if (p.y <= 0 || p.y >= height) p.vy *= -1;
-    }
-  }
+    const ctx =
+        canvas.getContext('2d');
 
-  function draw() {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, width, height);
 
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const a = particles[i];
-        const b = particles[j];
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+    let width;
+    let height;
 
-        if (dist < MAX_LINK_DISTANCE) {
-          const opacity = (1 - dist / MAX_LINK_DISTANCE) * 0.5;
-          ctx.strokeStyle = `rgba(${LINE_COLOR},${opacity.toFixed(2)})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
+    let particles = [];
+
+
+    /* -----------------------------------------------------
+       SETTINGS
+       ----------------------------------------------------- */
+
+    const PARTICLE_DENSITY =
+        14000;
+
+    const MAX_LINK_DISTANCE =
+        140;
+
+    const DOT_SPEED =
+        1.00;
+
+    const DOT_RADIUS_MIN =
+        1.5;
+
+    const DOT_RADIUS_MAX =
+        3;
+
+    const DOT_COLOR =
+        'rgba(100, 99, 99, 0.9)';
+
+    const LINE_COLOR =
+        '150,150,150';
+
+    const BG_COLOR =
+        '#fafafa';
+
+
+    /* -----------------------------------------------------
+       RESPONSIVE PARTICLE SETTINGS
+       ----------------------------------------------------- */
+
+    function getParticleDensity() {
+
+        const screenWidth =
+            window.innerWidth;
+
+
+        if (screenWidth <= 360) {
+            return 22000;
         }
-      }
+
+        if (screenWidth <= 480) {
+            return 19000;
+        }
+
+        if (screenWidth <= 768) {
+            return 17000;
+        }
+
+        return PARTICLE_DENSITY;
     }
 
-    ctx.fillStyle = DOT_COLOR;
-    for (const p of particles) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
+
+    /* -----------------------------------------------------
+       RESIZE
+       ----------------------------------------------------- */
+
+    function resize() {
+
+        width =
+            window.innerWidth;
+
+        height =
+            window.innerHeight;
+
+
+        const dpr =
+            Math.min(
+                window.devicePixelRatio || 1,
+                2
+            );
+
+
+        canvas.width =
+            width * dpr;
+
+        canvas.height =
+            height * dpr;
+
+
+        canvas.style.width =
+            `${width}px`;
+
+        canvas.style.height =
+            `${height}px`;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
     }
-  }
 
-  function animate() {
-    update();
-    draw();
-    requestAnimationFrame(animate);
-  }
 
-  window.addEventListener('resize', () => {
+    /* -----------------------------------------------------
+       CREATE PARTICLES
+       ----------------------------------------------------- */
+
+    function createParticles() {
+
+        const density =
+            getParticleDensity();
+
+
+        const count =
+            Math.floor(
+                (
+                    width *
+                    height
+                ) /
+                density
+            );
+
+
+        particles = [];
+
+
+        for (
+            let i = 0;
+            i < count;
+            i++
+        ) {
+
+            particles.push({
+
+                x:
+                    Math.random() *
+                    width,
+
+                y:
+                    Math.random() *
+                    height,
+
+                vx:
+                    (
+                        Math.random() -
+                        0.5
+                    ) *
+                    DOT_SPEED,
+
+                vy:
+                    (
+                        Math.random() -
+                        0.5
+                    ) *
+                    DOT_SPEED,
+
+                r:
+                    Math.random() *
+                    (
+                        DOT_RADIUS_MAX -
+                        DOT_RADIUS_MIN
+                    ) +
+                    DOT_RADIUS_MIN
+            });
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       UPDATE
+       ----------------------------------------------------- */
+
+    function update() {
+
+        for (const p of particles) {
+
+            p.x += p.vx;
+
+            p.y += p.vy;
+
+
+            if (
+                p.x <= 0 ||
+                p.x >= width
+            ) {
+
+                p.vx *= -1;
+            }
+
+
+            if (
+                p.y <= 0 ||
+                p.y >= height
+            ) {
+
+                p.vy *= -1;
+            }
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       DRAW
+       ----------------------------------------------------- */
+
+    function draw() {
+
+        ctx.fillStyle =
+            BG_COLOR;
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        /* Lines */
+
+        for (
+            let i = 0;
+            i < particles.length;
+            i++
+        ) {
+
+            for (
+                let j = i + 1;
+                j < particles.length;
+                j++
+            ) {
+
+                const a =
+                    particles[i];
+
+                const b =
+                    particles[j];
+
+
+                const dx =
+                    a.x - b.x;
+
+                const dy =
+                    a.y - b.y;
+
+
+                const dist =
+                    Math.sqrt(
+                        dx * dx +
+                        dy * dy
+                    );
+
+
+                if (
+                    dist <
+                    MAX_LINK_DISTANCE
+                ) {
+
+                    const opacity =
+                        (
+                            1 -
+                            dist /
+                            MAX_LINK_DISTANCE
+                        ) *
+                        0.5;
+
+
+                    ctx.strokeStyle =
+                        `rgba(
+                            ${LINE_COLOR},
+                            ${opacity.toFixed(2)}
+                        )`;
+
+
+                    ctx.lineWidth = 1;
+
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(
+                        a.x,
+                        a.y
+                    );
+
+                    ctx.lineTo(
+                        b.x,
+                        b.y
+                    );
+
+                    ctx.stroke();
+                }
+            }
+        }
+
+
+        /* Dots */
+
+        ctx.fillStyle =
+            DOT_COLOR;
+
+
+        for (const p of particles) {
+
+            ctx.beginPath();
+
+            ctx.arc(
+                p.x,
+                p.y,
+                p.r,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       ANIMATION
+       ----------------------------------------------------- */
+
+    function animateParticles() {
+
+        update();
+
+        draw();
+
+        requestAnimationFrame(
+            animateParticles
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       INITIALIZE
+       ----------------------------------------------------- */
+
     resize();
-    createParticles();
-  });
 
-  resize();
-  createParticles();
-  animate();
+    createParticles();
+
+    animateParticles();
+
+
+    /* -----------------------------------------------------
+       RESIZE EVENT
+       ----------------------------------------------------- */
+
+    let particleResizeTimeout;
+
+
+    window.addEventListener(
+        'resize',
+        () => {
+
+            clearTimeout(
+                particleResizeTimeout
+            );
+
+
+            particleResizeTimeout =
+                setTimeout(() => {
+
+                    resize();
+
+                    createParticles();
+
+                }, 150);
+        }
+    );
+
 })();
