@@ -1,590 +1,934 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-
-html, body {
-    margin: 0;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    background-image: url("sponge.jpg");
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-}
-
-header h3{
-    color: rgba(7, 173, 57, 0.708);
-}
-
-.hero-content h3, p{
-    color: #474646;
-}
-
-.hero-title{
-  font-family: 'Anton', sans-serif;
-  font-size: 5rem;
-  line-height: 0.95;
-  text-transform: uppercase;
-  color: transparent;
-  background: linear-gradient(180deg, #393737 0%, #363636 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 0 8px rgba(4, 255, 79, 0.708));
-}
-
-html{
-    scroll-behavior: smooth;
-}
-
-#bg-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    display: block;
-    pointer-events: none;
-}
-
-/* full-page particle/network background, sits behind header/main/footer */
-#particle-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    display: block;
-    pointer-events: none;
-}
-
-header {
-    position: relative;
-    top: 0;
-    z-index: 9;
-}
-
-main,
-footer {
-    position: relative;
-    z-index: 1;
-}
-
-ul {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-}
-
-#home {
-    position: relative;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 0 8%;
-    box-sizing: border-box;
-}
-
-nav h3{
-    font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-nav ul {
-    display: flex;
-    gap: 20px;
-}
-
-nav {
-    display: flex;
-    justify-content: space-between;
-    padding: 15px 30px;
-    align-items: center;
-    margin: 25px;
-  
-}
-
-nav a {
-    color: black;
-    text-decoration: none;
-    transition: all 0.3s;
-    font-size: 20px;
-}
-
-section {
-    min-height: 100vh;
-    scroll-margin-top: 100px;
-}
-
-nav a:hover{
-  text-decoration: underline;
-  color: black;
-  padding: 15px 15px;
-  border-radius: 10px;
-}
-
-.hero-content{
-    position: relative;
-    z-index: 1;
-    max-width: 550px;
-    text-align: left;
-}
-
-.hero-content h1 {
-    font-size: 56px;
-    font-weight: 800;
-    margin: 0;
-    line-height: 1.1;
-}
-
-.hero-content p {
-    font-size: 18px;
-    margin: 20px 0;
-}
-
-.hero-content h3{
-    font-size: 25px;
-    margin: 0 0 15px 0;
-}
-
-.hero-content a{
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: transparent;
-    border: 1px black solid;
-    color: black;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.hero-content a:hover{
-    background-color: rgba(4, 255, 79, 0.708);
-    color: black;
-    border: 1px black solid;
-}
-
-#about{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-#about h2{
-    margin: 0 0 30px 0;
-}
-
-.about-content{
-    max-width: 500px;
-    margin: 20px 0;
-    text-align: left;
-}
-
-#about h2{
-    margin: 0;
-    font-size: 40px;
-}
-
-.about-content p{
-    margin: 0 0 15px 0;
-    text-align: justify;
-    line-height: 1.6;
-}
-
-.about-container{ 
-    display: flex;
-    gap: 100px;
-    justify-content: center;
-    align-items: center;
-}
-
-.about-content h3 {
-    font-size: 25px;
-    margin: 15px 0
-}
-
-.about-image img{
-    width: 250px;
-    height: 250px;
-    border-radius: 20px;
-    object-fit: cover;
-    box-shadow: 2px 2px 15px rgba(4, 255, 79, 0.708);
-    border: solid rgb(0, 0, 0) 1px;
-    padding: 5px;
-    box-sizing: border-box;
-    transition: transform 0.3s;
-}
-
-.about-image img:hover{
-    transform: scale(1.2);
-}
-
-
-#skills{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 100px 0;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-#skills h2{
-    margin: 0 0 50px 0;
-    font-size: 40px;
-}
-
-@keyframes scroll-left {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-}
-
-@keyframes scroll-right {
-    from { transform: translateX(-50%); }
-    to   { transform: translateX(0); }
-}
 
-.skill-badge {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 22px;
-    border: 1px solid #646363;
-    border-radius: 30px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #333;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.skill-badge img {
-    width: 20px;
-    height: 20px;
-}
-
-.skill-marquee {
-    overflow: hidden;
-    width: 100%;
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    margin: 12px 0;
-}
-
-.skill-track {
-    display: flex;
-    gap: 16px;
-    width: max-content;
-    animation: scroll-left 60s linear infinite;
-}
+/* =========================================================
+   THREE.JS PIRATE PATRICK
+   ========================================================= */
 
-.skill-track.track-reverse {
-    animation: scroll-right 60s linear infinite;
-}
-
-.skill-marquee:hover .skill-track {
-    animation-play-state: paused;
-}
-
-#skills a{
-    display: inline-block;
-    text-align: center;
-    margin: 40px;
-    color: rgba(7, 173, 57, 0.708);
-    font-size: 20px;
-}
+const canvas = document.getElementById('bg-canvas');
+const homeSection = document.getElementById('home');
 
-/* ===== Projects & Contact (shared section layout) ===== */
-
-#projects,
-#contact {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 100px 8%;
-    box-sizing: border-box;
-    text-align: center;
-}
+const scene = new THREE.Scene();
 
-#projects h2,
-#contact h2 {
-    margin: 0;
-    font-size: 40px;
-}
 
-.section-subtitle {
-    color: #474646;
-    font-size: 16px;
-    margin: 15px 0 50px 0;
+function getSize() {
+    return {
+        width: homeSection.clientWidth,
+        height: homeSection.clientHeight
+    };
 }
 
-/* ===== Projects ===== */
-
-.projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 30px;
-    max-width: 1000px;
-    width: 100%;
-}
 
-.project-card {
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid #646363;
-    border-radius: 15px;
-    padding: 20px;
-    text-align: left;
-    box-sizing: border-box;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
+const { width: initWidth, height: initHeight } = getSize();
 
-.project-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 2px 2px 15px rgba(4, 255, 79, 0.708);
-}
 
-.project-image {
-    width: 100%;
-    height: 150px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    object-fit: cover;
-    display: block;
-    box-sizing: border-box;
-}
+/* =========================================================
+   CAMERA
+   ========================================================= */
 
-.project-image.placeholder {
-    background: repeating-linear-gradient(45deg, #e4e4e4, #e4e4e4 10px, #ececec 10px, #ececec 20px);
-    border: 1px dashed #999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #888;
-    font-size: 14px;
-}
+const camera = new THREE.PerspectiveCamera(
+    50,
+    initWidth / initHeight,
+    0.1,
+    1000
+);
 
-.project-card h3 {
-    margin: 0 0 10px 0;
-    font-size: 20px;
-    color: #222;
-}
+camera.position.set(0, 0, 5);
 
-.project-card p {
-    margin: 0 0 15px 0;
-    font-size: 15px;
-    line-height: 1.5;
-}
 
-.project-link {
-    display: inline-block;
-    padding: 8px 18px;
-    border: 1px black solid;
-    border-radius: 8px;
-    color: black;
-    text-decoration: none;
-    font-size: 14px;
-    transition: all 0.3s;
-}
+/* =========================================================
+   RENDERER
+   ========================================================= */
 
-.project-link:hover {
-    background-color: rgba(4, 255, 79, 0.708);
-}
+const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true
+});
 
-/* ===== Contact (flip cards) ===== */
+renderer.setSize(
+    initWidth,
+    initHeight
+);
 
-.contact-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    justify-content: center;
-}
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
 
-.contact-card {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-    perspective: 1000px;
-}
 
-.contact-flip {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-}
+/* =========================================================
+   LIGHTING
+   ========================================================= */
 
-.contact-card:hover .contact-flip {
-    transform: rotateY(180deg);
-}
+const ambient = new THREE.AmbientLight(
+    0xffffff,
+    2
+);
 
-.contact-front,
-.contact-back {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    border: 1px solid #646363;
-    border-radius: 20px;
-    box-sizing: border-box;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transition: box-shadow 0.3s;
-}
+scene.add(ambient);
 
-.contact-card:hover .contact-front,
-.contact-card:hover .contact-back {
-    box-shadow: 2px 2px 15px rgba(4, 255, 79, 0.708);
-}
 
-.contact-front {
-    background: rgba(255, 255, 255, 0.6);
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
-}
+const dirLight = new THREE.DirectionalLight(
+    0xffffff,
+    2
+);
 
-.contact-front img {
-    width: 40px;
-    height: 40px;
-}
+dirLight.position.set(
+    3,
+    5,
+    2
+);
 
-.contact-back {
-    background: rgba(4, 255, 79, 0.708);
-    transform: rotateY(180deg);
-    font-size: 20px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #1a1a1a;
-}
+scene.add(dirLight);
 
-/* ===== Rate my portfolio ===== */
-
-#rate {
-    min-height: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 80px 8% 100px 8%;
-    box-sizing: border-box;
-    text-align: center;
-}
 
-#rate h2 {
-    margin: 0;
-    font-size: 40px;
-}
+const hemiLight = new THREE.HemisphereLight(
+    0xffffff,
+    0x444444,
+    2
+);
 
-.rating-widget {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 25px;
-}
+scene.add(hemiLight);
 
-.stars {
-    display: flex;
-    gap: 10px;
-}
 
-.star {
-    font-size: 42px;
-    line-height: 1;
-    color: #ccc;
-    cursor: pointer;
-    transition: color 0.2s, transform 0.2s;
-    user-select: none;
-}
+/* =========================================================
+   MODEL
+   ========================================================= */
 
-.star:hover {
-    transform: scale(1.15);
-}
+const loader = new GLTFLoader();
 
-.star.active {
-    color: rgba(4, 200, 79, 0.9);
-    filter: drop-shadow(0 0 6px rgba(4, 255, 79, 0.708));
-}
+let model;
 
-.rating-submit {
-    padding: 10px 28px;
-    background-color: transparent;
-    border: 1px black solid;
-    color: black;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+let baseFitDistance = 0;
 
-.rating-submit:hover:not(:disabled) {
-    background-color: rgba(4, 255, 79, 0.708);
-}
+let baseModelY = 0;
 
-.rating-submit:disabled {
-    cursor: default;
-    border-color: rgba(4, 173, 57, 0.708);
-    color: rgba(7, 173, 57, 0.9);
-}
 
-.rating-thanks {
-    min-height: 20px;
-    margin: 0;
-    font-size: 15px;
-    color: rgba(7, 173, 57, 0.9);
-    font-weight: 600;
-    opacity: 0;
-}
+/* =========================================================
+   RESPONSIVE MODEL POSITION
+   ========================================================= */
 
-.rating-thanks.show {
-    animation: fade-in-up 0.4s ease forwards;
-}
+function getXOffsetRatio() {
 
-@keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+    const width = window.innerWidth;
 
-@media (max-width: 768px) {
-    #home {
-        justify-content: center;
-        text-align: center;
-        padding: 0 5%;
-    }
-    .hero-content {
-        text-align: center;
-    }
-    .hero-content h1 {
-        font-size: 38px;
+    /* Very small phones */
+    if (width <= 480) {
+        return 0;
     }
 
-    #skills{
-        padding: 60px 0;
+    /* Tablet / normal phones */
+    if (width <= 768) {
+        return 0;
     }
 
-    #projects,
-    #contact {
-        padding: 60px 5%;
-    }
-
-    .contact-flip {
-        width: 130px;
-        height: 130px;
-    }
-
-    .star {
-        font-size: 34px;
-    }
+    /* Desktop */
+    return 0.70;
 }
+
+
+function getCameraMultiplier() {
+
+    const width = window.innerWidth;
+
+    /*
+        Smaller multiplier = model appears bigger
+        Larger multiplier = model appears smaller
+    */
+
+    if (width <= 360) {
+        return 2.25;
+    }
+
+    if (width <= 480) {
+        return 2.05;
+    }
+
+    if (width <= 768) {
+        return 1.90;
+    }
+
+    if (width <= 1024) {
+        return 1.85;
+    }
+
+    return 1.80;
+}
+
+
+function getModelYOffset() {
+
+    const width = window.innerWidth;
+
+    if (width <= 360) {
+        return 0.05;
+    }
+
+    if (width <= 480) {
+        return 0.08;
+    }
+
+    if (width <= 768) {
+        return 0.10;
+    }
+
+    return 0.20;
+}
+
+
+function applyModelPosition() {
+
+    if (!model || !baseFitDistance) {
+        return;
+    }
+
+    model.position.x =
+        baseFitDistance *
+        getXOffsetRatio();
+}
+
+
+function updateCamera() {
+
+    if (!baseFitDistance) {
+        return;
+    }
+
+    const multiplier =
+        getCameraMultiplier();
+
+    camera.position.set(
+        0,
+        0,
+        baseFitDistance * multiplier
+    );
+
+    camera.near =
+        baseFitDistance / 100;
+
+    camera.far =
+        baseFitDistance * 100;
+
+    camera.updateProjectionMatrix();
+}
+
+
+/* =========================================================
+   LOAD GLB
+   ========================================================= */
+
+loader.load(
+
+    'pirate_patrick.glb',
+
+    (gltf) => {
+
+        model = gltf.scene;
+
+        scene.add(model);
+
+
+        /* -------------------------------------------------
+           MODEL MATERIALS
+           ------------------------------------------------- */
+
+        model.traverse((child) => {
+
+            if (child.isMesh) {
+
+                console.log(
+                    'Mesh:',
+                    child.name,
+                    '| Material:',
+                    child.material,
+                    '| Visible:',
+                    child.visible
+                );
+
+
+                if (child.material) {
+
+                    child.material.side =
+                        THREE.DoubleSide;
+                }
+            }
+        });
+
+
+        /* -------------------------------------------------
+           MODEL BOUNDING BOX
+           ------------------------------------------------- */
+
+        const box =
+            new THREE.Box3()
+                .setFromObject(model);
+
+
+        const size =
+            box.getSize(
+                new THREE.Vector3()
+            );
+
+
+        const center =
+            box.getCenter(
+                new THREE.Vector3()
+            );
+
+
+        /* Center model */
+
+        model.position.sub(center);
+
+
+        /* -------------------------------------------------
+           FIT MODEL TO CAMERA
+           ------------------------------------------------- */
+
+        const maxDim =
+            Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
+
+
+        const fitDistance =
+            maxDim /
+            (
+                2 *
+                Math.tan(
+                    (
+                        Math.PI *
+                        camera.fov
+                    ) /
+                    360
+                )
+            );
+
+
+        baseFitDistance =
+            fitDistance;
+
+
+        /* -------------------------------------------------
+           MODEL VERTICAL POSITION
+           ------------------------------------------------- */
+
+        const yOffset =
+            getModelYOffset();
+
+
+        model.position.y +=
+            fitDistance *
+            yOffset;
+
+
+        baseModelY =
+            model.position.y;
+
+
+        /* -------------------------------------------------
+           ROTATION
+           ------------------------------------------------- */
+
+        const MODEL_ROTATION_Y =
+            -0.5;
+
+        model.rotation.y =
+            MODEL_ROTATION_Y;
+
+
+        /* -------------------------------------------------
+           APPLY RESPONSIVE POSITION
+           ------------------------------------------------- */
+
+        applyModelPosition();
+
+        updateCamera();
+
+
+        console.log(
+            'Model size:',
+            size.x.toFixed(2),
+            size.y.toFixed(2),
+            size.z.toFixed(2),
+
+            '| Camera distance:',
+            camera.position.z.toFixed(2)
+        );
+    },
+
+
+    /* -----------------------------------------------------
+       LOADING
+       ----------------------------------------------------- */
+
+    (xhr) => {
+
+        if (xhr.total) {
+
+            console.log(
+                `Loading model: ${
+                    (
+                        xhr.loaded /
+                        xhr.total *
+                        100
+                    ).toFixed(0)
+                }%`
+            );
+        }
+    },
+
+
+    /* -----------------------------------------------------
+       ERROR
+       ----------------------------------------------------- */
+
+    (error) => {
+
+        console.error(
+            'Error loading pirate_patrick.glb:',
+            error
+        );
+    }
+);
+
+
+/* =========================================================
+   FLOATING ANIMATION
+   ========================================================= */
+
+const clock =
+    new THREE.Clock();
+
+
+const FLOAT_AMPLITUDE =
+    0.06;
+
+const FLOAT_SPEED =
+    2.0;
+
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    if (
+        model &&
+        baseFitDistance
+    ) {
+
+        const t =
+            clock.getElapsedTime();
+
+
+        const bobOffset =
+            Math.sin(
+                t *
+                FLOAT_SPEED
+            ) *
+            FLOAT_AMPLITUDE *
+            baseFitDistance;
+
+
+        model.position.y =
+            baseModelY +
+            bobOffset;
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+animate();
+
+
+/* =========================================================
+   RESIZE
+   ========================================================= */
+
+let resizeTimeout;
+
+
+window.addEventListener(
+    'resize',
+    () => {
+
+        clearTimeout(
+            resizeTimeout
+        );
+
+
+        resizeTimeout =
+            setTimeout(() => {
+
+                const {
+                    width,
+                    height
+                } = getSize();
+
+
+                /* Camera */
+
+                camera.aspect =
+                    width /
+                    height;
+
+
+                camera.updateProjectionMatrix();
+
+
+                /* Renderer */
+
+                renderer.setSize(
+                    width,
+                    height
+                );
+
+
+                /* Model */
+
+                applyModelPosition();
+
+                updateCamera();
+
+
+                /*
+                    Recalculate Y position
+                    based on current screen
+                */
+
+                if (model && baseFitDistance) {
+
+                    const yOffset =
+                        getModelYOffset();
+
+
+                    const newBaseY =
+                        yOffset *
+                        baseFitDistance;
+
+
+                    /*
+                        Keep floating animation
+                        centered around new position
+                    */
+
+                    baseModelY =
+                        newBaseY;
+                }
+
+            }, 100);
+    }
+);
+
+
+/* =========================================================
+   PARTICLE NETWORK BACKGROUND
+   ========================================================= */
+
+(function () {
+
+    const canvas =
+        document.getElementById(
+            'particle-bg'
+        );
+
+
+    if (!canvas) {
+        return;
+    }
+
+
+    const ctx =
+        canvas.getContext('2d');
+
+
+    let width;
+    let height;
+
+    let particles = [];
+
+
+    /* -----------------------------------------------------
+       SETTINGS
+       ----------------------------------------------------- */
+
+    const PARTICLE_DENSITY =
+        14000;
+
+    const MAX_LINK_DISTANCE =
+        140;
+
+    const DOT_SPEED =
+        1.00;
+
+    const DOT_RADIUS_MIN =
+        1.5;
+
+    const DOT_RADIUS_MAX =
+        3;
+
+    const DOT_COLOR =
+        'rgba(100, 99, 99, 0.9)';
+
+    const LINE_COLOR =
+        '150,150,150';
+
+    const BG_COLOR =
+        '#fafafa';
+
+
+    /* -----------------------------------------------------
+       RESPONSIVE PARTICLE SETTINGS
+       ----------------------------------------------------- */
+
+    function getParticleDensity() {
+
+        const screenWidth =
+            window.innerWidth;
+
+
+        if (screenWidth <= 360) {
+            return 22000;
+        }
+
+        if (screenWidth <= 480) {
+            return 19000;
+        }
+
+        if (screenWidth <= 768) {
+            return 17000;
+        }
+
+        return PARTICLE_DENSITY;
+    }
+
+
+    /* -----------------------------------------------------
+       RESIZE
+       ----------------------------------------------------- */
+
+    function resize() {
+
+        width =
+            window.innerWidth;
+
+        height =
+            window.innerHeight;
+
+
+        const dpr =
+            Math.min(
+                window.devicePixelRatio || 1,
+                2
+            );
+
+
+        canvas.width =
+            width * dpr;
+
+        canvas.height =
+            height * dpr;
+
+
+        canvas.style.width =
+            `${width}px`;
+
+        canvas.style.height =
+            `${height}px`;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       CREATE PARTICLES
+       ----------------------------------------------------- */
+
+    function createParticles() {
+
+        const density =
+            getParticleDensity();
+
+
+        const count =
+            Math.floor(
+                (
+                    width *
+                    height
+                ) /
+                density
+            );
+
+
+        particles = [];
+
+
+        for (
+            let i = 0;
+            i < count;
+            i++
+        ) {
+
+            particles.push({
+
+                x:
+                    Math.random() *
+                    width,
+
+                y:
+                    Math.random() *
+                    height,
+
+                vx:
+                    (
+                        Math.random() -
+                        0.5
+                    ) *
+                    DOT_SPEED,
+
+                vy:
+                    (
+                        Math.random() -
+                        0.5
+                    ) *
+                    DOT_SPEED,
+
+                r:
+                    Math.random() *
+                    (
+                        DOT_RADIUS_MAX -
+                        DOT_RADIUS_MIN
+                    ) +
+                    DOT_RADIUS_MIN
+            });
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       UPDATE
+       ----------------------------------------------------- */
+
+    function update() {
+
+        for (const p of particles) {
+
+            p.x += p.vx;
+
+            p.y += p.vy;
+
+
+            if (
+                p.x <= 0 ||
+                p.x >= width
+            ) {
+
+                p.vx *= -1;
+            }
+
+
+            if (
+                p.y <= 0 ||
+                p.y >= height
+            ) {
+
+                p.vy *= -1;
+            }
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       DRAW
+       ----------------------------------------------------- */
+
+    function draw() {
+
+        ctx.fillStyle =
+            BG_COLOR;
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        /* Lines */
+
+        for (
+            let i = 0;
+            i < particles.length;
+            i++
+        ) {
+
+            for (
+                let j = i + 1;
+                j < particles.length;
+                j++
+            ) {
+
+                const a =
+                    particles[i];
+
+                const b =
+                    particles[j];
+
+
+                const dx =
+                    a.x - b.x;
+
+                const dy =
+                    a.y - b.y;
+
+
+                const dist =
+                    Math.sqrt(
+                        dx * dx +
+                        dy * dy
+                    );
+
+
+                if (
+                    dist <
+                    MAX_LINK_DISTANCE
+                ) {
+
+                    const opacity =
+                        (
+                            1 -
+                            dist /
+                            MAX_LINK_DISTANCE
+                        ) *
+                        0.5;
+
+
+                    ctx.strokeStyle =
+                        `rgba(
+                            ${LINE_COLOR},
+                            ${opacity.toFixed(2)}
+                        )`;
+
+
+                    ctx.lineWidth = 1;
+
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(
+                        a.x,
+                        a.y
+                    );
+
+                    ctx.lineTo(
+                        b.x,
+                        b.y
+                    );
+
+                    ctx.stroke();
+                }
+            }
+        }
+
+
+        /* Dots */
+
+        ctx.fillStyle =
+            DOT_COLOR;
+
+
+        for (const p of particles) {
+
+            ctx.beginPath();
+
+            ctx.arc(
+                p.x,
+                p.y,
+                p.r,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       ANIMATION
+       ----------------------------------------------------- */
+
+    function animateParticles() {
+
+        update();
+
+        draw();
+
+        requestAnimationFrame(
+            animateParticles
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       INITIALIZE
+       ----------------------------------------------------- */
+
+    resize();
+
+    createParticles();
+
+    animateParticles();
+
+
+    /* -----------------------------------------------------
+       RESIZE EVENT
+       ----------------------------------------------------- */
+
+    let particleResizeTimeout;
+
+
+    window.addEventListener(
+        'resize',
+        () => {
+
+            clearTimeout(
+                particleResizeTimeout
+            );
+
+
+            particleResizeTimeout =
+                setTimeout(() => {
+
+                    resize();
+
+                    createParticles();
+
+                }, 150);
+        }
+    );
+
+})();
