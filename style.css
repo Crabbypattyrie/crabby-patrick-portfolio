@@ -1,934 +1,1715 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
 
 /* =========================================================
-   THREE.JS PIRATE PATRICK
+   RESET / GLOBAL
    ========================================================= */
 
-const canvas = document.getElementById('bg-canvas');
-const homeSection = document.getElementById('home');
-
-const scene = new THREE.Scene();
-
-
-function getSize() {
-    return {
-        width: homeSection.clientWidth,
-        height: homeSection.clientHeight
-    };
+* {
+    box-sizing: border-box;
 }
 
-
-const { width: initWidth, height: initHeight } = getSize();
-
-
-/* =========================================================
-   CAMERA
-   ========================================================= */
-
-const camera = new THREE.PerspectiveCamera(
-    50,
-    initWidth / initHeight,
-    0.1,
-    1000
-);
-
-camera.position.set(0, 0, 5);
-
-
-/* =========================================================
-   RENDERER
-   ========================================================= */
-
-const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    alpha: true
-});
-
-renderer.setSize(
-    initWidth,
-    initHeight
-);
-
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
-);
-
-
-/* =========================================================
-   LIGHTING
-   ========================================================= */
-
-const ambient = new THREE.AmbientLight(
-    0xffffff,
-    2
-);
-
-scene.add(ambient);
-
-
-const dirLight = new THREE.DirectionalLight(
-    0xffffff,
-    2
-);
-
-dirLight.position.set(
-    3,
-    5,
-    2
-);
-
-scene.add(dirLight);
-
-
-const hemiLight = new THREE.HemisphereLight(
-    0xffffff,
-    0x444444,
-    2
-);
-
-scene.add(hemiLight);
-
-
-/* =========================================================
-   MODEL
-   ========================================================= */
-
-const loader = new GLTFLoader();
-
-let model;
-
-let baseFitDistance = 0;
-
-let baseModelY = 0;
-
-
-/* =========================================================
-   RESPONSIVE MODEL POSITION
-   ========================================================= */
-
-function getXOffsetRatio() {
-
-    const width = window.innerWidth;
-
-    /* Very small phones */
-    if (width <= 480) {
-        return 0;
-    }
-
-    /* Tablet / normal phones */
-    if (width <= 768) {
-        return 0;
-    }
-
-    /* Desktop */
-    return 0.70;
+html {
+    scroll-behavior: smooth;
 }
 
-
-function getCameraMultiplier() {
-
-    const width = window.innerWidth;
-
-    /*
-        Smaller multiplier = model appears bigger
-        Larger multiplier = model appears smaller
-    */
-
-    if (width <= 360) {
-        return 2.25;
-    }
-
-    if (width <= 480) {
-        return 2.05;
-    }
-
-    if (width <= 768) {
-        return 1.90;
-    }
-
-    if (width <= 1024) {
-        return 1.85;
-    }
-
-    return 1.80;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
+body {
+    background-image: url("sponge.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 
-function getModelYOffset() {
-
-    const width = window.innerWidth;
-
-    if (width <= 360) {
-        return 0.05;
-    }
-
-    if (width <= 480) {
-        return 0.08;
-    }
-
-    if (width <= 768) {
-        return 0.10;
-    }
-
-    return 0.20;
+    font-family:
+        'Lucida Sans',
+        'Lucida Sans Regular',
+        'Lucida Grande',
+        'Lucida Sans Unicode',
+        Geneva,
+        Verdana,
+        sans-serif;
 }
 
-
-function applyModelPosition() {
-
-    if (!model || !baseFitDistance) {
-        return;
-    }
-
-    model.position.x =
-        baseFitDistance *
-        getXOffsetRatio();
+ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
 }
 
-
-function updateCamera() {
-
-    if (!baseFitDistance) {
-        return;
-    }
-
-    const multiplier =
-        getCameraMultiplier();
-
-    camera.position.set(
-        0,
-        0,
-        baseFitDistance * multiplier
-    );
-
-    camera.near =
-        baseFitDistance / 100;
-
-    camera.far =
-        baseFitDistance * 100;
-
-    camera.updateProjectionMatrix();
+img {
+    max-width: 100%;
 }
 
 
 /* =========================================================
-   LOAD GLB
+   BACKGROUND CANVASES
    ========================================================= */
 
-loader.load(
+#bg-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
 
-    'pirate_patrick.glb',
+    width: 100%;
+    height: 100%;
 
-    (gltf) => {
+    z-index: 0;
+    display: block;
 
-        model = gltf.scene;
+    pointer-events: none;
+}
 
-        scene.add(model);
+#particle-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
 
+    width: 100vw;
+    height: 100vh;
 
-        /* -------------------------------------------------
-           MODEL MATERIALS
-           ------------------------------------------------- */
+    z-index: 0;
+    display: block;
 
-        model.traverse((child) => {
-
-            if (child.isMesh) {
-
-                console.log(
-                    'Mesh:',
-                    child.name,
-                    '| Material:',
-                    child.material,
-                    '| Visible:',
-                    child.visible
-                );
-
-
-                if (child.material) {
-
-                    child.material.side =
-                        THREE.DoubleSide;
-                }
-            }
-        });
-
-
-        /* -------------------------------------------------
-           MODEL BOUNDING BOX
-           ------------------------------------------------- */
-
-        const box =
-            new THREE.Box3()
-                .setFromObject(model);
-
-
-        const size =
-            box.getSize(
-                new THREE.Vector3()
-            );
-
-
-        const center =
-            box.getCenter(
-                new THREE.Vector3()
-            );
-
-
-        /* Center model */
-
-        model.position.sub(center);
-
-
-        /* -------------------------------------------------
-           FIT MODEL TO CAMERA
-           ------------------------------------------------- */
-
-        const maxDim =
-            Math.max(
-                size.x,
-                size.y,
-                size.z
-            );
-
-
-        const fitDistance =
-            maxDim /
-            (
-                2 *
-                Math.tan(
-                    (
-                        Math.PI *
-                        camera.fov
-                    ) /
-                    360
-                )
-            );
-
-
-        baseFitDistance =
-            fitDistance;
-
-
-        /* -------------------------------------------------
-           MODEL VERTICAL POSITION
-           ------------------------------------------------- */
-
-        const yOffset =
-            getModelYOffset();
-
-
-        model.position.y +=
-            fitDistance *
-            yOffset;
-
-
-        baseModelY =
-            model.position.y;
-
-
-        /* -------------------------------------------------
-           ROTATION
-           ------------------------------------------------- */
-
-        const MODEL_ROTATION_Y =
-            -0.5;
-
-        model.rotation.y =
-            MODEL_ROTATION_Y;
-
-
-        /* -------------------------------------------------
-           APPLY RESPONSIVE POSITION
-           ------------------------------------------------- */
-
-        applyModelPosition();
-
-        updateCamera();
-
-
-        console.log(
-            'Model size:',
-            size.x.toFixed(2),
-            size.y.toFixed(2),
-            size.z.toFixed(2),
-
-            '| Camera distance:',
-            camera.position.z.toFixed(2)
-        );
-    },
-
-
-    /* -----------------------------------------------------
-       LOADING
-       ----------------------------------------------------- */
-
-    (xhr) => {
-
-        if (xhr.total) {
-
-            console.log(
-                `Loading model: ${
-                    (
-                        xhr.loaded /
-                        xhr.total *
-                        100
-                    ).toFixed(0)
-                }%`
-            );
-        }
-    },
-
-
-    /* -----------------------------------------------------
-       ERROR
-       ----------------------------------------------------- */
-
-    (error) => {
-
-        console.error(
-            'Error loading pirate_patrick.glb:',
-            error
-        );
-    }
-);
-
-
-/* =========================================================
-   FLOATING ANIMATION
-   ========================================================= */
-
-const clock =
-    new THREE.Clock();
-
-
-const FLOAT_AMPLITUDE =
-    0.06;
-
-const FLOAT_SPEED =
-    2.0;
-
-
-function animate() {
-
-    requestAnimationFrame(
-        animate
-    );
-
-
-    if (
-        model &&
-        baseFitDistance
-    ) {
-
-        const t =
-            clock.getElapsedTime();
-
-
-        const bobOffset =
-            Math.sin(
-                t *
-                FLOAT_SPEED
-            ) *
-            FLOAT_AMPLITUDE *
-            baseFitDistance;
-
-
-        model.position.y =
-            baseModelY +
-            bobOffset;
-    }
-
-
-    renderer.render(
-        scene,
-        camera
-    );
+    pointer-events: none;
 }
 
 
-animate();
+/* =========================================================
+   HEADER / NAVIGATION
+   ========================================================= */
+
+header {
+    position: relative;
+    top: 0;
+    z-index: 9;
+
+    width: 100%;
+}
+
+header h3 {
+    color: rgba(7, 173, 57, 0.708);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 15px 30px;
+    margin: 25px;
+
+    gap: 20px;
+}
+
+nav h3 {
+    margin: 0;
+
+    font-family:
+        'Open Sans',
+        'Helvetica Neue',
+        sans-serif;
+
+    white-space: nowrap;
+}
+
+nav ul {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 20px;
+}
+
+nav a {
+    color: black;
+    text-decoration: none;
+
+    font-size: 20px;
+
+    transition:
+        color 0.3s,
+        background-color 0.3s,
+        padding 0.3s,
+        transform 0.3s;
+}
+
+nav a:hover {
+    text-decoration: underline;
+    color: black;
+
+    padding: 10px 12px;
+    border-radius: 10px;
+}
 
 
 /* =========================================================
-   RESIZE
+   MAIN
    ========================================================= */
 
-let resizeTimeout;
+main,
+footer {
+    position: relative;
+    z-index: 1;
+}
 
+section {
+    width: 100%;
+    min-height: 100vh;
 
-window.addEventListener(
-    'resize',
-    () => {
-
-        clearTimeout(
-            resizeTimeout
-        );
-
-
-        resizeTimeout =
-            setTimeout(() => {
-
-                const {
-                    width,
-                    height
-                } = getSize();
-
-
-                /* Camera */
-
-                camera.aspect =
-                    width /
-                    height;
-
-
-                camera.updateProjectionMatrix();
-
-
-                /* Renderer */
-
-                renderer.setSize(
-                    width,
-                    height
-                );
-
-
-                /* Model */
-
-                applyModelPosition();
-
-                updateCamera();
-
-
-                /*
-                    Recalculate Y position
-                    based on current screen
-                */
-
-                if (model && baseFitDistance) {
-
-                    const yOffset =
-                        getModelYOffset();
-
-
-                    const newBaseY =
-                        yOffset *
-                        baseFitDistance;
-
-
-                    /*
-                        Keep floating animation
-                        centered around new position
-                    */
-
-                    baseModelY =
-                        newBaseY;
-                }
-
-            }, 100);
-    }
-);
+    scroll-margin-top: 100px;
+}
 
 
 /* =========================================================
-   PARTICLE NETWORK BACKGROUND
+   HOME
    ========================================================= */
 
-(function () {
+#home {
+    position: relative;
+    overflow: hidden;
 
-    const canvas =
-        document.getElementById(
-            'particle-bg'
+    width: 100%;
+    height: 100vh;
+    min-height: 650px;
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    padding: 0 8%;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+
+    width: 100%;
+    max-width: 550px;
+
+    text-align: left;
+}
+
+.hero-content h1 {
+    font-size: 56px;
+    font-weight: 800;
+
+    margin: 0;
+
+    line-height: 1.1;
+}
+
+.hero-content h3,
+.hero-content p {
+    color: #474646;
+}
+
+.hero-content h3 {
+    font-size: 25px;
+    margin: 0 0 15px 0;
+}
+
+.hero-content p {
+    font-size: 18px;
+    line-height: 1.6;
+
+    margin: 20px 0;
+}
+
+.hero-title {
+    font-family: 'Anton', sans-serif;
+
+    font-size: 5rem;
+    line-height: 0.95;
+
+    text-transform: uppercase;
+
+    color: transparent;
+
+    background:
+        linear-gradient(
+            180deg,
+            #393737 0%,
+            #363636 100%
         );
 
+    -webkit-background-clip: text;
+    background-clip: text;
 
-    if (!canvas) {
-        return;
-    }
-
-
-    const ctx =
-        canvas.getContext('2d');
-
-
-    let width;
-    let height;
-
-    let particles = [];
-
-
-    /* -----------------------------------------------------
-       SETTINGS
-       ----------------------------------------------------- */
-
-    const PARTICLE_DENSITY =
-        14000;
-
-    const MAX_LINK_DISTANCE =
-        140;
-
-    const DOT_SPEED =
-        1.00;
-
-    const DOT_RADIUS_MIN =
-        1.5;
-
-    const DOT_RADIUS_MAX =
-        3;
-
-    const DOT_COLOR =
-        'rgba(100, 99, 99, 0.9)';
-
-    const LINE_COLOR =
-        '150,150,150';
-
-    const BG_COLOR =
-        '#fafafa';
-
-
-    /* -----------------------------------------------------
-       RESPONSIVE PARTICLE SETTINGS
-       ----------------------------------------------------- */
-
-    function getParticleDensity() {
-
-        const screenWidth =
-            window.innerWidth;
-
-
-        if (screenWidth <= 360) {
-            return 22000;
-        }
-
-        if (screenWidth <= 480) {
-            return 19000;
-        }
-
-        if (screenWidth <= 768) {
-            return 17000;
-        }
-
-        return PARTICLE_DENSITY;
-    }
-
-
-    /* -----------------------------------------------------
-       RESIZE
-       ----------------------------------------------------- */
-
-    function resize() {
-
-        width =
-            window.innerWidth;
-
-        height =
-            window.innerHeight;
-
-
-        const dpr =
-            Math.min(
-                window.devicePixelRatio || 1,
-                2
-            );
-
-
-        canvas.width =
-            width * dpr;
-
-        canvas.height =
-            height * dpr;
-
-
-        canvas.style.width =
-            `${width}px`;
-
-        canvas.style.height =
-            `${height}px`;
-
-
-        ctx.setTransform(
-            dpr,
-            0,
-            0,
-            dpr,
-            0,
-            0
+    filter:
+        drop-shadow(
+            0 0 8px
+            rgba(4, 255, 79, 0.708)
         );
+}
+
+.hero-content a {
+    display: inline-block;
+
+    padding: 10px 20px;
+
+    background-color: transparent;
+
+    border: 1px solid black;
+    border-radius: 8px;
+
+    color: black;
+    text-decoration: none;
+
+    transition:
+        background-color 0.3s,
+        transform 0.3s;
+}
+
+.hero-content a:hover {
+    background-color: rgba(4, 255, 79, 0.708);
+
+    color: black;
+
+    border: 1px solid black;
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   ABOUT
+   ========================================================= */
+
+#about {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    flex-direction: column;
+
+    padding: 100px 8%;
+
+    min-height: 100vh;
+}
+
+#about h2 {
+    margin: 0 0 30px 0;
+
+    font-size: 40px;
+}
+
+.about-container {
+    width: 100%;
+    max-width: 1000px;
+
+    display: flex;
+
+    gap: 100px;
+
+    justify-content: center;
+    align-items: center;
+}
+
+.about-content {
+    width: 100%;
+    max-width: 500px;
+
+    margin: 20px 0;
+
+    text-align: left;
+}
+
+.about-content h3 {
+    font-size: 25px;
+
+    margin: 15px 0;
+}
+
+.about-content p {
+    margin: 0 0 15px 0;
+
+    text-align: justify;
+
+    line-height: 1.6;
+}
+
+.about-image {
+    flex-shrink: 0;
+}
+
+.about-image img {
+    width: 250px;
+    height: 250px;
+
+    border-radius: 20px;
+
+    object-fit: cover;
+
+    box-shadow:
+        2px 2px 15px
+        rgba(4, 255, 79, 0.708);
+
+    border: 1px solid black;
+
+    padding: 5px;
+
+    transition: transform 0.3s;
+}
+
+.about-image img:hover {
+    transform: scale(1.08);
+}
+
+
+/* =========================================================
+   SKILLS
+   ========================================================= */
+
+#skills {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 100px 0;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+}
+
+#skills h2 {
+    margin: 0 0 50px 0;
+
+    font-size: 40px;
+
+    text-align: center;
+}
+
+@keyframes scroll-left {
+    from {
+        transform: translateX(0);
     }
 
+    to {
+        transform: translateX(-50%);
+    }
+}
 
-    /* -----------------------------------------------------
-       CREATE PARTICLES
-       ----------------------------------------------------- */
-
-    function createParticles() {
-
-        const density =
-            getParticleDensity();
-
-
-        const count =
-            Math.floor(
-                (
-                    width *
-                    height
-                ) /
-                density
-            );
-
-
-        particles = [];
-
-
-        for (
-            let i = 0;
-            i < count;
-            i++
-        ) {
-
-            particles.push({
-
-                x:
-                    Math.random() *
-                    width,
-
-                y:
-                    Math.random() *
-                    height,
-
-                vx:
-                    (
-                        Math.random() -
-                        0.5
-                    ) *
-                    DOT_SPEED,
-
-                vy:
-                    (
-                        Math.random() -
-                        0.5
-                    ) *
-                    DOT_SPEED,
-
-                r:
-                    Math.random() *
-                    (
-                        DOT_RADIUS_MAX -
-                        DOT_RADIUS_MIN
-                    ) +
-                    DOT_RADIUS_MIN
-            });
-        }
+@keyframes scroll-right {
+    from {
+        transform: translateX(-50%);
     }
 
-
-    /* -----------------------------------------------------
-       UPDATE
-       ----------------------------------------------------- */
-
-    function update() {
-
-        for (const p of particles) {
-
-            p.x += p.vx;
-
-            p.y += p.vy;
-
-
-            if (
-                p.x <= 0 ||
-                p.x >= width
-            ) {
-
-                p.vx *= -1;
-            }
-
-
-            if (
-                p.y <= 0 ||
-                p.y >= height
-            ) {
-
-                p.vy *= -1;
-            }
-        }
+    to {
+        transform: translateX(0);
     }
+}
 
+.skill-marquee {
+    overflow: hidden;
 
-    /* -----------------------------------------------------
-       DRAW
-       ----------------------------------------------------- */
+    width: 100%;
 
-    function draw() {
-
-        ctx.fillStyle =
-            BG_COLOR;
-
-        ctx.fillRect(
-            0,
-            0,
-            width,
-            height
+    mask-image:
+        linear-gradient(
+            to right,
+            transparent,
+            black 10%,
+            black 90%,
+            transparent
         );
 
-
-        /* Lines */
-
-        for (
-            let i = 0;
-            i < particles.length;
-            i++
-        ) {
-
-            for (
-                let j = i + 1;
-                j < particles.length;
-                j++
-            ) {
-
-                const a =
-                    particles[i];
-
-                const b =
-                    particles[j];
-
-
-                const dx =
-                    a.x - b.x;
-
-                const dy =
-                    a.y - b.y;
-
-
-                const dist =
-                    Math.sqrt(
-                        dx * dx +
-                        dy * dy
-                    );
-
-
-                if (
-                    dist <
-                    MAX_LINK_DISTANCE
-                ) {
-
-                    const opacity =
-                        (
-                            1 -
-                            dist /
-                            MAX_LINK_DISTANCE
-                        ) *
-                        0.5;
-
-
-                    ctx.strokeStyle =
-                        `rgba(
-                            ${LINE_COLOR},
-                            ${opacity.toFixed(2)}
-                        )`;
-
-
-                    ctx.lineWidth = 1;
-
-
-                    ctx.beginPath();
-
-                    ctx.moveTo(
-                        a.x,
-                        a.y
-                    );
-
-                    ctx.lineTo(
-                        b.x,
-                        b.y
-                    );
-
-                    ctx.stroke();
-                }
-            }
-        }
-
-
-        /* Dots */
-
-        ctx.fillStyle =
-            DOT_COLOR;
-
-
-        for (const p of particles) {
-
-            ctx.beginPath();
-
-            ctx.arc(
-                p.x,
-                p.y,
-                p.r,
-                0,
-                Math.PI * 2
-            );
-
-            ctx.fill();
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       ANIMATION
-       ----------------------------------------------------- */
-
-    function animateParticles() {
-
-        update();
-
-        draw();
-
-        requestAnimationFrame(
-            animateParticles
+    -webkit-mask-image:
+        linear-gradient(
+            to right,
+            transparent,
+            black 10%,
+            black 90%,
+            transparent
         );
+
+    margin: 12px 0;
+}
+
+.skill-track {
+    display: flex;
+
+    gap: 16px;
+
+    width: max-content;
+
+    animation:
+        scroll-left
+        60s
+        linear
+        infinite;
+}
+
+.skill-track.track-reverse {
+    animation:
+        scroll-right
+        60s
+        linear
+        infinite;
+}
+
+.skill-marquee:hover .skill-track {
+    animation-play-state: paused;
+}
+
+.skill-badge {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 12px 22px;
+
+    border: 1px solid #646363;
+
+    border-radius: 30px;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    color: #333;
+
+    white-space: nowrap;
+
+    flex-shrink: 0;
+}
+
+.skill-badge img {
+    width: 20px;
+    height: 20px;
+
+    object-fit: contain;
+}
+
+#skills a {
+    display: inline-block;
+
+    text-align: center;
+
+    margin: 40px;
+
+    color: rgba(7, 173, 57, 0.708);
+
+    font-size: 20px;
+}
+
+
+/* =========================================================
+   PROJECTS
+   ========================================================= */
+
+#projects {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 100px 8%;
+
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+#projects h2 {
+    margin: 0;
+
+    font-size: 40px;
+}
+
+.section-subtitle {
+    color: #474646;
+
+    font-size: 16px;
+
+    line-height: 1.6;
+
+    margin: 15px 0 50px 0;
+}
+
+.projects-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(260px, 1fr)
+        );
+
+    gap: 30px;
+
+    max-width: 1000px;
+
+    width: 100%;
+}
+
+.project-card {
+    width: 100%;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+        );
+
+    border: 1px solid #646363;
+
+    border-radius: 15px;
+
+    padding: 20px;
+
+    text-align: left;
+
+    transition:
+        transform 0.3s,
+        box-shadow 0.3s;
+}
+
+.project-card:hover {
+    transform: translateY(-6px);
+
+    box-shadow:
+        2px 2px 15px
+        rgba(4, 255, 79, 0.708);
+}
+
+.project-image {
+    width: 100%;
+    height: 150px;
+
+    border-radius: 10px;
+
+    margin-bottom: 15px;
+
+    object-fit: cover;
+
+    display: block;
+}
+
+.project-image.placeholder {
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #e4e4e4,
+            #e4e4e4 10px,
+            #ececec 10px,
+            #ececec 20px
+        );
+
+    border: 1px dashed #999;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #888;
+
+    font-size: 14px;
+}
+
+.project-card h3 {
+    margin: 0 0 10px 0;
+
+    font-size: 20px;
+
+    color: #222;
+}
+
+.project-card p {
+    margin: 0 0 15px 0;
+
+    font-size: 15px;
+
+    line-height: 1.5;
+}
+
+.project-link {
+    display: inline-block;
+
+    padding: 8px 18px;
+
+    border: 1px solid black;
+
+    border-radius: 8px;
+
+    color: black;
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    transition:
+        background-color 0.3s,
+        transform 0.3s;
+}
+
+.project-link:hover {
+    background-color: rgba(4, 255, 79, 0.708);
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   CONTACT
+   ========================================================= */
+
+#contact {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 100px 8%;
+
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+#contact h2 {
+    margin: 0;
+
+    font-size: 40px;
+}
+
+.contact-grid {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 30px;
+
+    justify-content: center;
+
+    width: 100%;
+}
+
+.contact-card {
+    display: block;
+
+    width: 160px;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    perspective: 1000px;
+}
+
+.contact-flip {
+    position: relative;
+
+    width: 160px;
+    height: 160px;
+
+    transition:
+        transform 0.6s;
+
+    transform-style: preserve-3d;
+}
+
+.contact-card:hover .contact-flip {
+    transform: rotateY(180deg);
+}
+
+.contact-front,
+.contact-back {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    border: 1px solid #646363;
+
+    border-radius: 20px;
+
+    box-sizing: border-box;
+
+    backface-visibility: hidden;
+
+    -webkit-backface-visibility: hidden;
+
+    transition:
+        box-shadow 0.3s;
+}
+
+.contact-card:hover .contact-front,
+.contact-card:hover .contact-back {
+    box-shadow:
+        2px 2px 15px
+        rgba(4, 255, 79, 0.708);
+}
+
+.contact-front {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.6
+        );
+
+    font-size: 16px;
+
+    font-weight: 500;
+
+    color: #333;
+}
+
+.contact-front img {
+    width: 40px;
+    height: 40px;
+
+    object-fit: contain;
+}
+
+.contact-back {
+    background:
+        rgba(
+            4,
+            255,
+            79,
+            0.708
+        );
+
+    transform: rotateY(180deg);
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    color: #1a1a1a;
+}
+
+
+/* =========================================================
+   RATE
+   ========================================================= */
+
+#rate {
+    width: 100%;
+
+    min-height: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    padding: 80px 8% 100px;
+
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+#rate h2 {
+    margin: 0;
+
+    font-size: 40px;
+}
+
+.rating-widget {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 25px;
+
+    width: 100%;
+}
+
+.stars {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 10px;
+}
+
+.star {
+    font-size: 42px;
+
+    line-height: 1;
+
+    color: #ccc;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s,
+        transform 0.2s;
+
+    user-select: none;
+}
+
+.star:hover {
+    transform: scale(1.15);
+}
+
+.star.active {
+    color: rgba(4, 200, 79, 0.9);
+
+    filter:
+        drop-shadow(
+            0 0 6px
+            rgba(4, 255, 79, 0.708)
+        );
+}
+
+.rating-submit {
+    padding: 10px 28px;
+
+    background-color: transparent;
+
+    border: 1px solid black;
+
+    color: black;
+
+    border-radius: 8px;
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.3s,
+        transform 0.3s;
+}
+
+.rating-submit:hover:not(:disabled) {
+    background-color: rgba(4, 255, 79, 0.708);
+
+    transform: translateY(-2px);
+}
+
+.rating-submit:disabled {
+    cursor: default;
+
+    border-color:
+        rgba(
+            4,
+            173,
+            57,
+            0.708
+        );
+
+    color:
+        rgba(
+            7,
+            173,
+            57,
+            0.9
+        );
+}
+
+.rating-thanks {
+    min-height: 20px;
+
+    margin: 0;
+
+    font-size: 15px;
+
+    color:
+        rgba(
+            7,
+            173,
+            57,
+            0.9
+        );
+
+    font-weight: 600;
+
+    opacity: 0;
+}
+
+.rating-thanks.show {
+    animation:
+        fade-in-up
+        0.4s
+        ease
+        forwards;
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+    nav {
+        margin: 15px;
+        padding: 15px 20px;
+    }
+
+    nav ul {
+        gap: 12px;
+    }
+
+    nav a {
+        font-size: 16px;
+    }
+
+    #home {
+        padding: 0 6%;
+    }
+
+    .hero-content {
+        max-width: 480px;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+    }
+
+    .about-container {
+        gap: 50px;
+
+        max-width: 850px;
+    }
+
+    .about-content {
+        max-width: 450px;
+    }
+
+    .projects-grid {
+        max-width: 900px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    /* GLOBAL */
+
+    html,
+    body {
+        width: 100%;
+
+        overflow-x: hidden;
+    }
+
+    body {
+        background-attachment: scroll;
+    }
+
+    section {
+        width: 100%;
+
+        min-height: auto;
+
+        scroll-margin-top: 0;
     }
 
 
-    /* -----------------------------------------------------
-       INITIALIZE
-       ----------------------------------------------------- */
+    /* NAV */
 
-    resize();
+    header {
+        width: 100%;
+    }
 
-    createParticles();
+    nav {
+        width: 100%;
 
-    animateParticles();
+        margin: 0;
+
+        padding: 15px 15px 10px;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        gap: 12px;
+    }
+
+    nav h3 {
+        font-size: 19px;
+
+        text-align: center;
+    }
+
+    nav ul {
+        width: 100%;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        flex-wrap: wrap;
+
+        gap: 8px 14px;
+    }
+
+    nav a {
+        font-size: 13px;
+    }
+
+    nav a:hover {
+        padding: 4px 6px;
+    }
 
 
-    /* -----------------------------------------------------
-       RESIZE EVENT
-       ----------------------------------------------------- */
+    /* HOME */
 
-    let particleResizeTimeout;
+    #home {
+        width: 100%;
 
+        height: calc(100svh - 100px);
 
-    window.addEventListener(
-        'resize',
-        () => {
+        min-height: 550px;
 
-            clearTimeout(
-                particleResizeTimeout
+        padding: 30px 20px;
+
+        justify-content: center;
+
+        align-items: center;
+
+        text-align: center;
+    }
+
+    .hero-content {
+        width: 100%;
+
+        max-width: 600px;
+
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size:
+            clamp(
+                2.5rem,
+                12vw,
+                4rem
             );
 
+        line-height: 0.95;
 
-            particleResizeTimeout =
-                setTimeout(() => {
+        margin: 0 0 15px;
+    }
 
-                    resize();
+    .hero-content h1 {
+        font-size:
+            clamp(
+                32px,
+                9vw,
+                48px
+            );
+    }
 
-                    createParticles();
+    .hero-content h3 {
+        font-size: 20px;
 
-                }, 150);
-        }
-    );
+        margin-bottom: 15px;
+    }
 
-})();
+    .hero-content p {
+        font-size: 15px;
+
+        line-height: 1.6;
+
+        margin: 15px auto 20px;
+
+        max-width: 520px;
+    }
+
+    .hero-content a {
+        padding: 9px 15px;
+
+        font-size: 14px;
+
+        margin: 3px;
+    }
+
+
+    /* ABOUT */
+
+    #about {
+        width: 100%;
+
+        padding: 80px 20px;
+
+        text-align: center;
+    }
+
+    #about h2 {
+        font-size:
+            clamp(
+                30px,
+                8vw,
+                40px
+            );
+
+        margin: 0 0 35px;
+    }
+
+    .about-container {
+        width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 30px;
+
+        align-items: center;
+    }
+
+    .about-image {
+        width: 100%;
+
+        display: flex;
+
+        justify-content: center;
+    }
+
+    .about-image img {
+        width:
+            min(
+                250px,
+                70vw
+            );
+
+        height:
+            min(
+                250px,
+                70vw
+            );
+    }
+
+    .about-image img:hover {
+        transform: scale(1.04);
+    }
+
+    .about-content {
+        width: 100%;
+
+        max-width: 600px;
+
+        margin: 0;
+
+        text-align: left;
+    }
+
+    .about-content h3 {
+        font-size: 22px;
+
+        text-align: center;
+
+        margin: 5px 0 20px;
+    }
+
+    .about-content p {
+        font-size: 15px;
+
+        line-height: 1.7;
+
+        text-align: left;
+    }
+
+
+    /* SKILLS */
+
+    #skills {
+        width: 100%;
+
+        padding: 80px 0;
+    }
+
+    #skills h2 {
+        font-size:
+            clamp(
+                30px,
+                8vw,
+                40px
+            );
+
+        margin: 0 20px 40px;
+    }
+
+    .skill-marquee {
+        width: 100%;
+
+        margin: 8px 0;
+    }
+
+    .skill-track {
+        gap: 10px;
+    }
+
+    .skill-badge {
+        padding: 9px 15px;
+
+        font-size: 13px;
+
+        gap: 7px;
+    }
+
+    .skill-badge img {
+        width: 18px;
+        height: 18px;
+    }
+
+    #skills a {
+        margin: 30px;
+
+        font-size: 17px;
+    }
+
+
+    /* PROJECTS */
+
+    #projects {
+        width: 100%;
+
+        padding: 80px 20px;
+    }
+
+    #projects h2 {
+        font-size:
+            clamp(
+                30px,
+                8vw,
+                40px
+            );
+    }
+
+    .section-subtitle {
+        max-width: 550px;
+
+        font-size: 14px;
+
+        line-height: 1.6;
+
+        margin: 15px 0 35px;
+    }
+
+    .projects-grid {
+        width: 100%;
+
+        max-width: 550px;
+
+        grid-template-columns:
+            minmax(0, 1fr);
+
+        gap: 20px;
+    }
+
+    .project-card {
+        width: 100%;
+
+        padding: 16px;
+    }
+
+    .project-image {
+        width: 100%;
+
+        height: 180px;
+    }
+
+    .project-card h3 {
+        font-size: 19px;
+    }
+
+    .project-card p {
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+    .project-link {
+        padding: 8px 15px;
+
+        font-size: 13px;
+    }
+
+
+    /* CONTACT */
+
+    #contact {
+        width: 100%;
+
+        padding: 80px 20px;
+    }
+
+    #contact h2 {
+        font-size:
+            clamp(
+                30px,
+                8vw,
+                40px
+            );
+
+        margin-bottom: 35px;
+    }
+
+    .contact-grid {
+        width: 100%;
+
+        max-width: 420px;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 15px;
+    }
+
+    .contact-card {
+        width: 100%;
+    }
+
+    .contact-flip {
+        width: 100%;
+
+        height: 140px;
+    }
+
+    .contact-front,
+    .contact-back {
+        border-radius: 16px;
+    }
+
+    .contact-front {
+        font-size: 14px;
+    }
+
+    .contact-front img {
+        width: 32px;
+        height: 32px;
+    }
+
+    .contact-back {
+        font-size: 16px;
+    }
+
+
+    /* RATE */
+
+    #rate {
+        width: 100%;
+
+        padding: 80px 20px 100px;
+    }
+
+    #rate h2 {
+        font-size:
+            clamp(
+                30px,
+                8vw,
+                40px
+            );
+
+        margin-bottom: 30px;
+    }
+
+    .rating-widget {
+        width: 100%;
+
+        gap: 20px;
+    }
+
+    .stars {
+        gap: 4px;
+    }
+
+    .star {
+        font-size:
+            clamp(
+                30px,
+                10vw,
+                42px
+            );
+    }
+
+    .rating-submit {
+        padding: 10px 25px;
+
+        font-size: 15px;
+    }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   481px AND BELOW
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    nav {
+        padding: 12px 10px 8px;
+    }
+
+    nav h3 {
+        font-size: 18px;
+    }
+
+    nav ul {
+        gap: 6px 10px;
+    }
+
+    nav a {
+        font-size: 12px;
+    }
+
+
+    #home {
+        height: calc(100svh - 95px);
+
+        min-height: 500px;
+
+        padding: 25px 15px;
+    }
+
+    .hero-title {
+        font-size:
+            clamp(
+                2.2rem,
+                12vw,
+                3.2rem
+            );
+    }
+
+    .hero-content h3 {
+        font-size: 18px;
+    }
+
+    .hero-content p {
+        font-size: 14px;
+
+        line-height: 1.55;
+    }
+
+    .hero-content a {
+        padding: 9px 13px;
+
+        font-size: 13px;
+    }
+
+
+    #about {
+        padding: 70px 15px;
+    }
+
+    .about-image img {
+        width: 200px;
+        height: 200px;
+    }
+
+    .about-content p {
+        font-size: 14px;
+
+        line-height: 1.65;
+    }
+
+
+    #skills {
+        padding: 70px 0;
+    }
+
+    .skill-badge {
+        padding: 8px 13px;
+
+        font-size: 12px;
+    }
+
+    .skill-badge img {
+        width: 16px;
+        height: 16px;
+    }
+
+
+    #projects,
+    #contact {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .project-image {
+        height: 160px;
+    }
+
+    .project-card {
+        padding: 14px;
+    }
+
+
+    .contact-grid {
+        gap: 10px;
+
+        max-width: 360px;
+    }
+
+    .contact-flip {
+        height: 125px;
+    }
+
+    .contact-front img {
+        width: 28px;
+        height: 28px;
+    }
+
+    .contact-front {
+        font-size: 12px;
+    }
+
+    .contact-back {
+        font-size: 14px;
+    }
+
+
+    .star {
+        font-size: 30px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   360px AND BELOW
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    nav ul {
+        gap: 5px 7px;
+    }
+
+    nav a {
+        font-size: 11px;
+    }
+
+
+    #home {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .hero-title {
+        font-size: 2.05rem;
+    }
+
+    .hero-content h3 {
+        font-size: 17px;
+    }
+
+    .hero-content p {
+        font-size: 13px;
+    }
+
+    .hero-content a {
+        display: block;
+
+        width: 80%;
+
+        margin: 8px auto;
+    }
+
+
+    .about-image img {
+        width: 180px;
+        height: 180px;
+    }
+
+
+    .skill-badge {
+        padding: 8px 11px;
+
+        font-size: 11px;
+    }
+
+
+    .project-card h3 {
+        font-size: 18px;
+    }
+
+    .project-card p {
+        font-size: 13px;
+    }
+
+
+    .contact-flip {
+        height: 115px;
+    }
+
+    .contact-front {
+        font-size: 11px;
+    }
+
+    .contact-back {
+        font-size: 13px;
+    }
+
+    .contact-front img {
+        width: 25px;
+        height: 25px;
+    }
+
+
+    .star {
+        font-size: 28px;
+    }
+}
