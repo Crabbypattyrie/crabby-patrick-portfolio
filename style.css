@@ -1,10 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
-
-/* =========================================================
-   RESET / GLOBAL
-   ========================================================= */
-
 * {
     box-sizing: border-box;
 }
@@ -49,11 +44,6 @@ img {
     max-width: 100%;
 }
 
-
-/* =========================================================
-   BACKGROUND CANVASES
-   ========================================================= */
-
 #bg-canvas {
     position: absolute;
     top: 0;
@@ -82,10 +72,153 @@ img {
     pointer-events: none;
 }
 
+.music-hint {
+    position: fixed;
+    top: 88px;
+    right: 30px;
+    z-index: 10;
 
-/* =========================================================
-   HEADER / NAVIGATION
-   ========================================================= */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    max-width: 220px;
+
+    padding: 10px 12px 10px 16px;
+
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #646363;
+    border-radius: 14px;
+
+    box-shadow:
+        2px 2px 12px
+        rgba(4, 255, 79, 0.5);
+
+    font-size: 14px;
+    color: #333;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transform: translateY(-8px);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+.music-hint::before {
+    content: "";
+
+    position: absolute;
+    top: -8px;
+    right: 22px;
+
+    width: 14px;
+    height: 14px;
+
+    background: rgba(255, 255, 255, 0.92);
+    border-left: 1px solid #646363;
+    border-top: 1px solid #646363;
+
+    transform: rotate(45deg);
+}
+
+.music-hint.show {
+    opacity: 1;
+    pointer-events: auto;
+
+    transform: translateY(0);
+}
+
+.music-hint span {
+    flex: 1;
+
+    line-height: 1.4;
+}
+
+.music-hint-close {
+    flex-shrink: 0;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    border: none;
+
+    color: #666;
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: color 0.2s;
+}
+
+.music-hint-close:hover {
+    color: #000;
+}
+
+.music-toggle {
+    position: fixed;
+    top: 25px;
+    right: 30px;
+    z-index: 10;
+
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid #646363;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.3s,
+        box-shadow 0.3s,
+        background-color 0.3s;
+}
+
+.music-toggle:hover {
+    transform: scale(1.08);
+    box-shadow:
+        2px 2px 15px
+        rgba(4, 255, 79, 0.708);
+}
+
+.music-toggle.playing {
+    background: rgba(4, 255, 79, 0.708);
+    animation: music-pulse 1.6s ease-in-out infinite;
+}
+
+.music-icon {
+    font-size: 18px;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+@keyframes music-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0
+            rgba(4, 255, 79, 0.5);
+    }
+
+    50% {
+        box-shadow:
+            0 0 16px
+            rgba(4, 255, 79, 0.708);
+    }
+}
 
 header {
     position: relative;
@@ -104,7 +237,7 @@ nav {
     justify-content: space-between;
     align-items: center;
 
-    padding: 15px 30px;
+    padding: 15px 110px 15px 30px;
     margin: 25px;
 
     gap: 20px;
@@ -150,11 +283,6 @@ nav a:hover {
     border-radius: 10px;
 }
 
-
-/* =========================================================
-   MAIN
-   ========================================================= */
-
 main,
 footer {
     position: relative;
@@ -167,11 +295,6 @@ section {
 
     scroll-margin-top: 100px;
 }
-
-
-/* =========================================================
-   HOME
-   ========================================================= */
 
 #home {
     position: relative;
@@ -279,11 +402,6 @@ section {
     transform: translateY(-2px);
 }
 
-
-/* =========================================================
-   ABOUT
-   ========================================================= */
-
 #about {
     width: 100%;
 
@@ -365,11 +483,6 @@ section {
 .about-image img:hover {
     transform: scale(1.08);
 }
-
-
-/* =========================================================
-   SKILLS
-   ========================================================= */
 
 #skills {
     width: 100%;
@@ -508,11 +621,6 @@ section {
 
     font-size: 20px;
 }
-
-
-/* =========================================================
-   PROJECTS
-   ========================================================= */
 
 #projects {
     width: 100%;
@@ -671,11 +779,6 @@ section {
     transform: translateY(-2px);
 }
 
-
-/* =========================================================
-   CONTACT
-   ========================================================= */
-
 #contact {
     width: 100%;
 
@@ -816,11 +919,6 @@ section {
 
     color: #1a1a1a;
 }
-
-
-/* =========================================================
-   RATE
-   ========================================================= */
 
 #rate {
     width: 100%;
@@ -982,16 +1080,11 @@ section {
     }
 }
 
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
 @media (max-width: 1024px) {
 
     nav {
         margin: 15px;
-        padding: 15px 20px;
+        padding: 15px 90px 15px 20px;
     }
 
     nav ul {
@@ -1029,14 +1122,7 @@ section {
     }
 }
 
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
 @media (max-width: 768px) {
-
-    /* GLOBAL */
 
     html,
     body {
@@ -1056,9 +1142,6 @@ section {
 
         scroll-margin-top: 0;
     }
-
-
-    /* NAV */
 
     header {
         width: 100%;
@@ -1106,19 +1189,18 @@ section {
         padding: 4px 6px;
     }
 
-
-    /* HOME */
-
     #home {
         width: 100%;
 
         height: calc(100svh - 100px);
 
-        min-height: 550px;
+        min-height: 620px;
 
-        padding: 30px 20px;
+        padding: 24px 20px 30px;
 
-        justify-content: center;
+        flex-direction: column;
+
+        justify-content: flex-end;
 
         align-items: center;
 
@@ -1131,6 +1213,8 @@ section {
         max-width: 600px;
 
         text-align: center;
+
+        margin-top: auto;
     }
 
     .hero-title {
@@ -1178,9 +1262,6 @@ section {
 
         margin: 3px;
     }
-
-
-    /* ABOUT */
 
     #about {
         width: 100%;
@@ -1246,7 +1327,7 @@ section {
 
         margin: 0;
 
-        text-align: left;
+        text-align: justify;
     }
 
     .about-content h3 {
@@ -1262,11 +1343,8 @@ section {
 
         line-height: 1.7;
 
-        text-align: left;
+        text-align: justify;
     }
-
-
-    /* SKILLS */
 
     #skills {
         width: 100%;
@@ -1313,9 +1391,6 @@ section {
 
         font-size: 17px;
     }
-
-
-    /* PROJECTS */
 
     #projects {
         width: 100%;
@@ -1381,9 +1456,6 @@ section {
         font-size: 13px;
     }
 
-
-    /* CONTACT */
-
     #contact {
         width: 100%;
 
@@ -1445,9 +1517,6 @@ section {
         font-size: 16px;
     }
 
-
-    /* RATE */
-
     #rate {
         width: 100%;
 
@@ -1491,13 +1560,34 @@ section {
     }
 }
 
-
-/* =========================================================
-   SMALL PHONES
-   481px AND BELOW
-   ========================================================= */
-
 @media (max-width: 480px) {
+
+    .music-toggle {
+        top: 15px;
+        right: 15px;
+
+        width: 44px;
+        height: 44px;
+    }
+
+    .music-icon {
+        font-size: 15px;
+    }
+
+    .music-hint {
+        top: 65px;
+        right: 15px;
+
+        max-width: 170px;
+
+        padding: 8px 10px 8px 12px;
+
+        font-size: 12px;
+    }
+
+    .music-hint::before {
+        right: 16px;
+    }
 
     nav {
         padding: 12px 10px 8px;
@@ -1515,13 +1605,12 @@ section {
         font-size: 12px;
     }
 
-
     #home {
         height: calc(100svh - 95px);
 
-        min-height: 500px;
+        min-height: 560px;
 
-        padding: 25px 15px;
+        padding: 20px 15px 25px;
     }
 
     .hero-title {
@@ -1549,7 +1638,6 @@ section {
         font-size: 13px;
     }
 
-
     #about {
         padding: 70px 15px;
     }
@@ -1563,8 +1651,9 @@ section {
         font-size: 14px;
 
         line-height: 1.65;
-    }
 
+        text-align: justify;
+    }
 
     #skills {
         padding: 70px 0;
@@ -1581,7 +1670,6 @@ section {
         height: 16px;
     }
 
-
     #projects,
     #contact {
         padding-left: 15px;
@@ -1595,7 +1683,6 @@ section {
     .project-card {
         padding: 14px;
     }
-
 
     .contact-grid {
         gap: 10px;
@@ -1620,17 +1707,10 @@ section {
         font-size: 14px;
     }
 
-
     .star {
         font-size: 30px;
     }
 }
-
-
-/* =========================================================
-   VERY SMALL PHONES
-   360px AND BELOW
-   ========================================================= */
 
 @media (max-width: 360px) {
 
@@ -1641,7 +1721,6 @@ section {
     nav a {
         font-size: 11px;
     }
-
 
     #home {
         padding-left: 12px;
@@ -1668,19 +1747,20 @@ section {
         margin: 8px auto;
     }
 
-
     .about-image img {
         width: 180px;
         height: 180px;
     }
 
+    .about-content p {
+        text-align: justify;
+    }
 
     .skill-badge {
         padding: 8px 11px;
 
         font-size: 11px;
     }
-
 
     .project-card h3 {
         font-size: 18px;
@@ -1689,7 +1769,6 @@ section {
     .project-card p {
         font-size: 13px;
     }
-
 
     .contact-flip {
         height: 115px;
@@ -1707,7 +1786,6 @@ section {
         width: 25px;
         height: 25px;
     }
-
 
     .star {
         font-size: 28px;
