@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>CrabbyPatrick</title>
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
-    <link
-        rel="icon"
-        type="image/png"
-        href="logo.png"
-    >
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrabbyPatrick</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
 <canvas id="particle-bg"></canvas>
+
+<audio id="bgMusic" loop preload="none">
+  <source src="audio3.mp3" type="audio/mpeg">
+  <source src="audio2.mp3" type="audio/mpeg">
+  <source src="audio1.mp3" type="audio/mpeg">
+  <source src="audio4.mp3" type="audio/mpeg">
+  <source src="audio5.mp3" type="audio/mpeg">
+</audio>
+
+<button id="musicToggle" class="music-toggle" aria-label="Play background music">
+  <span class="music-icon">&#9658;</span>
+</button>
+
+<div id="musicHint" class="music-hint">
+  <span>Tap to play at samahan ako sa music taste ko</span>
+  <button id="musicHintClose" class="music-hint-close" aria-label="Close hint">&times;</button>
+</div>
 
 <header>
   <nav>
@@ -82,7 +82,7 @@
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/vite/646CFF" alt="">Vite</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/npm/CB3837" alt="">npm</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/threedotjs/000000" alt="">Three.js</div>
-  
+
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/html5/E34F26" alt="">HTML5</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/css/1572B6" alt="">CSS</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/javascript/F7DF1E" alt="">JavaScript</div>
@@ -104,7 +104,6 @@
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/framer/0055FF" alt="">Framer</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/pinterest/BD081C" alt="">Pinterest</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/davinciresolve/233A51" alt="">DaVinci Resolve</div>
-        <!-- duplicate set -->
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/mysql/4479A1" alt="">MySQL</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/github/181717" alt="">GitHub</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/git/F05032" alt="">Git</div>
@@ -126,7 +125,6 @@
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/cline/000000" alt="">Cline</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/claude/D97757" alt="">Claude</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/githubcopilot/000000" alt="">GitHub Copilot</div>
-        <!-- duplicate set -->
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/cursor/000000" alt="">Cursor</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/claude/D97757" alt="">Claude Code</div>
         <div class="skill-badge"><img src="https://cdn.simpleicons.org/anthropic/191919" alt="">Anthropic</div>
@@ -142,7 +140,7 @@
 
   <section id="projects">
     <h2>PROJECTS</h2>
-    <p class="section-subtitle">Wala pa tong section na to under construction pa kaya puro ka gagian ko lang nandito.</p>
+    <p class="section-subtitle">Wala pa tong section na to HAHAHA kaya puro ka gagian ko lang nandito.</p>
     <div class="projects-grid">
       <div class="project-card">
         <img class="project-image" src="project1.jpg" alt="Project 1 screenshot">
@@ -169,7 +167,7 @@
     <h2>GET IN TOUCH</h2>
     <p class="section-subtitle">Hover a card to flip it, then click to reach out.</p>
     <div class="contact-grid">
-      <a class="contact-card" href="patrickpardillo14@example.com">
+      <a class="contact-card" href="mailto:patrickpardillo14@gmail.com">
         <div class="contact-flip">
           <div class="contact-front">
             <img src="https://cdn.simpleicons.org/gmail/EA4335" alt="Email">
@@ -231,6 +229,44 @@
 
 <script>
 (function () {
+  const music = document.getElementById('bgMusic');
+  const toggleBtn = document.getElementById('musicToggle');
+  const icon = toggleBtn.querySelector('.music-icon');
+  const hint = document.getElementById('musicHint');
+  const hintClose = document.getElementById('musicHintClose');
+
+  function hideHint() {
+    hint.classList.remove('show');
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      hint.classList.add('show');
+    }, 700);
+  });
+
+  hintClose.addEventListener('click', hideHint);
+
+  toggleBtn.addEventListener('click', () => {
+    hideHint();
+
+    if (music.paused) {
+      music.play().catch(() => {});
+      icon.innerHTML = '&#10074;&#10074;';
+      toggleBtn.classList.add('playing');
+      toggleBtn.setAttribute('aria-label', 'Pause background music');
+    } else {
+      music.pause();
+      icon.innerHTML = '&#9658;';
+      toggleBtn.classList.remove('playing');
+      toggleBtn.setAttribute('aria-label', 'Play background music');
+    }
+  });
+})();
+</script>
+
+<script>
+(function () {
   const stars = document.querySelectorAll('#starRating .star');
   const submitBtn = document.getElementById('submitRating');
   const thanks = document.getElementById('ratingThanks');
@@ -255,14 +291,14 @@
     if (submitBtn.disabled) return;
 
     if (selected === 0) {
-      thanks.textContent = 'Pumili muna ng rating bago mag-submit!';
+      thanks.textContent = 'I-rate muna po muna bago mag submit!';
       thanks.classList.remove('show');
       void thanks.offsetWidth;
       thanks.classList.add('show');
       return;
     }
 
-    thanks.textContent = 'Thanks for the ' + selected + '-star rating!';
+    thanks.textContent = 'Thanks for the ' + selected + '-star rating! W ka';
     thanks.classList.remove('show');
     void thanks.offsetWidth;
     thanks.classList.add('show');
@@ -283,7 +319,5 @@
 
 <script type="module" src="script.js"></script>
 
-</body>
-</html>
 </body>
 </html>
